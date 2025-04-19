@@ -1,0 +1,70 @@
+model Library
+
+-- Custom Date class since OCL doesn't have a built-in Date type
+class Date
+attributes
+  day : Integer
+  month : Integer
+  year : Integer
+operations
+  -- Operation to compare dates
+  isAfter(other : Date) : Boolean =
+    if self.year > other.year then true
+    else if self.year = other.year and self.month > other.month then true
+    else if self.year = other.year and self.month = other.month and self.day > other.day then true
+    else false
+    endif
+    endif
+    endif
+end
+
+-- Classes
+class Book
+attributes
+  title : String
+  available : Boolean
+end
+
+class Member
+attributes
+  name : String
+  memberId : String
+end
+
+class Loan
+attributes
+  loanDate : Date
+  returnDate : Date
+end
+
+-- Associations
+association BorrowedBy between
+  Book[0..1] role book
+  Member[0..1] role borrower
+end
+
+association LoanHistory between
+  Book[1] role bookLoaned
+  Loan[*] role loans
+end
+
+association MemberLoans between
+  Member[1] role loanee
+  Loan[*] role memberLoans
+end
+
+-- OCL Constraints
+constraints
+
+-- A member can't borrow more than 5 books
+context Member inv maxBorrowedBooks:
+  self.memberLoans->select(l | l.returnDate.isUndefined())->size() <= 5
+
+-- A book can only be borrowed if it's available
+context Book inv availableForBorrowing:
+  self.borrower->notEmpty() implies not self.available
+
+-- Return date must be after loan date
+context Loan inv validDateRange:
+  not self.returnDate.isUndefined() implies
+    self.returnDate.isAfter(self.loanDate)
