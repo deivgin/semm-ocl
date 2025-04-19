@@ -1,0 +1,4 @@
+-- Loan-related constraints
+context Loan inv validDateRange:
+  not self.returnDate.isUndefined() implies
+    self.returnDate.isAfter(self.loanDate)

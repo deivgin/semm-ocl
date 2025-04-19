@@ -1,0 +1,5 @@
+class Book
+attributes
+  title : String
+  available : Boolean
+end

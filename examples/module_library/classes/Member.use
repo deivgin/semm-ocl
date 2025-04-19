@@ -1,0 +1,5 @@
+class Member
+attributes
+  name : String
+  memberId : String
+end

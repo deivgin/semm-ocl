@@ -1,0 +1,3 @@
+-- Member-related constraints
+context Member inv maxBorrowedBooks:
+  self.memberLoans->select(l | l.returnDate.isUndefined())->size() <= 5

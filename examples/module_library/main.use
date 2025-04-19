@@ -1,0 +1,79 @@
+model Library
+
+-- ==============================
+-- CLASSES
+-- ==============================
+
+class Book
+attributes
+  title : String
+  available : Boolean
+end
+
+class Date
+attributes
+  day : Integer
+  month : Integer
+  year : Integer
+operations
+  isAfter(other : Date) : Boolean =
+    if self.year > other.year then true
+    else if self.year = other.year and self.month > other.month then true
+    else if self.year = other.year and self.month = other.month and self.day > other.day then true
+    else false
+    endif
+    endif
+    endif
+end
+
+class Loan
+attributes
+  loanDate : Date
+  returnDate : Date
+end
+
+class Member
+attributes
+  name : String
+  memberId : String
+end
+
+-- ==============================
+-- ASSOCIATIONS
+-- ==============================
+
+-- Associations between classes
+association BorrowedBy between
+  Book[0..1] role book
+  Member[0..1] role borrower
+end
+
+association LoanHistory between
+  Book[1] role bookLoaned
+  Loan[*] role loans
+end
+
+association MemberLoans between
+  Member[1] role loanee
+  Loan[*] role memberLoans
+end
+
+-- ==============================
+-- CONSTRAINTS
+-- ==============================
+
+constraints
+
+-- Book-related constraints
+context Book inv availableForBorrowing:
+  self.borrower->notEmpty() implies not self.available
+
+-- Loan-related constraints
+context Loan inv validDateRange:
+  not self.returnDate.isUndefined() implies
+    self.returnDate.isAfter(self.loanDate)
+
+-- Member-related constraints
+context Member inv maxBorrowedBooks:
+  self.memberLoans->select(l | l.returnDate.isUndefined())->size() <= 5
+

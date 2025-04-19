@@ -1,0 +1,15 @@
+class Date
+attributes
+  day : Integer
+  month : Integer
+  year : Integer
+operations
+  isAfter(other : Date) : Boolean =
+    if self.year > other.year then true
+    else if self.year = other.year and self.month > other.month then true
+    else if self.year = other.year and self.month = other.month and self.day > other.day then true
+    else false
+    endif
+    endif
+    endif
+end

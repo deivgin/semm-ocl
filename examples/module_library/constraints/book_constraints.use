@@ -1,0 +1,3 @@
+-- Book-related constraints
+context Book inv availableForBorrowing:
+  self.borrower->notEmpty() implies not self.available

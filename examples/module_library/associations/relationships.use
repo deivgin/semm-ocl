@@ -1,0 +1,15 @@
+-- Associations between classes
+association BorrowedBy between
+  Book[0..1] role book
+  Member[0..1] role borrower
+end
+
+association LoanHistory between
+  Book[1] role bookLoaned
+  Loan[*] role loans
+end
+
+association MemberLoans between
+  Member[1] role loanee
+  Loan[*] role memberLoans
+end
