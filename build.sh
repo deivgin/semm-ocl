@@ -7,10 +7,28 @@ OUTPUT_FILE="src/main.use"
 CLASSES_DIR="src/classes"
 ASSOCIATIONS_DIR="src/associations"
 CONSTRAINTS_DIR="src/constraints"
+ENUMS_DIR="src/enums"
 
 # Create the output file with model header
 echo "model $MODEL_NAME" > $OUTPUT_FILE
 echo "" >> $OUTPUT_FILE
+
+# Add separator and enumerations
+echo "-- ==============================" >> $OUTPUT_FILE
+echo "-- ENUMERATIONS" >> $OUTPUT_FILE
+echo "-- ==============================" >> $OUTPUT_FILE
+echo "" >> $OUTPUT_FILE
+
+# Add each enumeration file
+if [ -d "$ENUMS_DIR" ]; then
+  for file in $ENUMS_DIR/*.use; do
+    if [ -f "$file" ]; then
+      echo "Adding enumeration from $file"
+      cat "$file" >> $OUTPUT_FILE
+      echo "" >> $OUTPUT_FILE
+    fi
+  done
+fi
 
 # Add separator and classes
 echo "-- ==============================" >> $OUTPUT_FILE

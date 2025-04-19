@@ -1,0 +1,14 @@
+association Owns between
+  User [*] role owner
+  Task [1] role ownedBy
+end
+
+association Manages between
+  User [*] role manager
+  Project [1] role managedBy
+end
+
+association Contains between
+  Task [0..1] role project
+  Project [*] role tasks
+end

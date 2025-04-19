@@ -1,12 +1,62 @@
 model Untangle
 
 -- ==============================
+-- ENUMERATIONS
+-- ==============================
+
+enum Priority {low, medium, high}
+
+enum Status {open, in_progress, done}
+
+-- ==============================
 -- CLASSES
 -- ==============================
+
+class Project
+attributes
+  id: String
+  title: String
+  description: String
+  status: String
+  tasks: Set(Task)
+end
+
+class Task
+attributes
+  id: String
+  title: String
+  description: String
+  priority: Priority
+  status: Status
+  project: Project
+end
+
+class User
+attributes
+  id: String
+  name: String
+  email: String
+  projects: Set(Project)
+end
 
 -- ==============================
 -- ASSOCIATIONS
 -- ==============================
+
+association Owns between
+  User [*] role owner
+  Task [1] role ownedBy
+end
+
+association Manages between
+  User [*] role manager
+  Project [1] role managedBy
+end
+
+association Contains between
+  Task [0..1] role project
+  Project [*] role tasks
+end
 
 -- ==============================
 -- CONSTRAINTS

@@ -1,0 +1,7 @@
+class User
+attributes
+  id: String
+  name: String
+  email: String
+  projects: Set(Project)
+end
