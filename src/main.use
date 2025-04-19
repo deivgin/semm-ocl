@@ -12,12 +12,26 @@ enum Status {open, in_progress, done}
 -- CLASSES
 -- ==============================
 
+class Date
+attributes
+  day : Integer
+  month : Integer
+  year : Integer
+operations
+  -- Formatting operation
+  toString() : String =
+    self.day.toString() + '/' + self.month.toString() + '/' + self.year.toString()
+constraints
+  inv validDay: self.day >= 1 and self.day <= 31
+  inv validMonth: self.month >= 1 and self.month <= 12
+  inv validYear: self.year > 0
+end
+
 class Project
 attributes
   id: String
   title: String
   description: String
-  status: String
   tasks: Set(Task)
 end
 
@@ -29,6 +43,9 @@ attributes
   priority: Priority
   status: Status
   project: Project
+  dueDate: Date
+operations
+  updateStatus(status: Status)
 end
 
 class User
