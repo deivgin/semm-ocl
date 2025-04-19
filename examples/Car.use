@@ -1,8 +1,0 @@
-model Car
-
-class Car
-attributes
-  mileage: Integer
-operations
-  increaseMileage(kilometers : Integer)
-end
