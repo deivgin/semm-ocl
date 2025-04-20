@@ -1,5 +1,4 @@
 -- Test file for Project::validId invariant
-
 -- This invariant ensures that project IDs are not empty strings
 
 -- Setup: Create valid project

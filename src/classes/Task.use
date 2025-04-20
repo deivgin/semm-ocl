@@ -13,5 +13,4 @@ operations
   setPriority(priority: Priority)
   setStatus(status: Status)
   setDueDate(date: Date)
-  addToProject(projectId: String)
 end

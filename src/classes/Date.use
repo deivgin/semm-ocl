@@ -5,5 +5,5 @@ operations
   year() : Integer
   month() : Integer
   day() : Integer
-  days() : Integer
+  days() : Integer = self.now
 end

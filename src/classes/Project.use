@@ -3,16 +3,8 @@ attributes
   id: String
   title: String
   description: String
-  tasks: Set(Task)
   startDate: Date
   endDate: Date
 operations
   getDuration(): Integer
-  getTasks(): Set(Task) = self.tasks
-  getTask(taskId: String): Task = self.tasks ->
-    select(t | t.id = taskId) ->
-      asSequence() -> first()
-  getTaskCount(): Integer = self.tasks -> size()
-  addTask(task: Task)
-  removeTask(taskId: String)
 end

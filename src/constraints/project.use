@@ -1,5 +1,5 @@
 context Project inv idRequired:
   self.id <> null and self.id <> ''
 
-context Project inv uniqueTaskIds:
-  self.tasks -> isUnique(t | t.id)
+context Project inv validDates:
+  self.startDate.days() <= self.endDate.days()
