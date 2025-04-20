@@ -5,8 +5,13 @@ attributes
   description: String
   priority: Priority
   status: Status
-  project: Project
+  projectId: String
   dueDate: Date
 operations
-  updateStatus(status: Status)
+  updateTitle(title: String)
+  updateDescription(description: String)
+  setPriority(priority: Priority)
+  setStatus(status: Status)
+  setDueDate(date: Date)
+  addToProject(projectId: String)
 end

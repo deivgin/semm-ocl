@@ -14,17 +14,12 @@ enum Status {open, in_progress, done}
 
 class Date
 attributes
-  day : Integer
-  month : Integer
-  year : Integer
+  now: Integer
 operations
-  -- Formatting operation
-  toString() : String =
-    self.day.toString() + '/' + self.month.toString() + '/' + self.year.toString()
-constraints
-  inv validDay: self.day >= 1 and self.day <= 31
-  inv validMonth: self.month >= 1 and self.month <= 12
-  inv validYear: self.year > 0
+  year() : Integer
+  month() : Integer
+  day() : Integer
+  days() : Integer
 end
 
 class Project
@@ -33,6 +28,17 @@ attributes
   title: String
   description: String
   tasks: Set(Task)
+  startDate: Date
+  endDate: Date
+operations
+  getDuration(): Integer
+  getTasks(): Set(Task) = self.tasks
+  getTask(taskId: String): Task = self.tasks ->
+    select(t | t.id = taskId) ->
+      asSequence() -> first()
+  getTaskCount(): Integer = self.tasks -> size()
+  addTask(task: Task)
+  removeTask(taskId: String)
 end
 
 class Task
@@ -42,10 +48,15 @@ attributes
   description: String
   priority: Priority
   status: Status
-  project: Project
+  projectId: String
   dueDate: Date
 operations
-  updateStatus(status: Status)
+  updateTitle(title: String)
+  updateDescription(description: String)
+  setPriority(priority: Priority)
+  setStatus(status: Status)
+  setDueDate(date: Date)
+  addToProject(projectId: String)
 end
 
 class User
@@ -54,6 +65,10 @@ attributes
   name: String
   email: String
   projects: Set(Project)
+  tasks: Set(Task)
+operations
+  getProjects(): Set(Project) = self.projects
+  setName(name: String)
 end
 
 -- ==============================
@@ -80,4 +95,16 @@ end
 -- ==============================
 
 constraints
+
+context Project inv idRequired:
+  self.id <> null and self.id <> ''
+
+context Project inv uniqueTaskIds:
+  self.tasks -> isUnique(t | t.id)
+
+context Task inv idRequired: self.id <> null and self.id <> ''
+
+context User inv idRequired: self.id <> null and self.id <> ''
+
+context User inv emailRequired: self.email <> null and self.email <> ''
 

@@ -4,4 +4,8 @@ attributes
   name: String
   email: String
   projects: Set(Project)
+  tasks: Set(Task)
+operations
+  getProjects(): Set(Project) = self.projects
+  setName(name: String)
 end
