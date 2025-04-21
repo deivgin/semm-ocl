@@ -17,16 +17,9 @@
 !set project1.startDate := 20220
 !set project1.endDate := 20320
 
--- create connection
+-- check test case
 !openter task1 assignToProject(project1)
 
 !insert (task1, project1) into Contains
-
-!opexit
-
--- remove connection
-!openter task1 removeFromProject(project1)
-
-!delete (task1, project1) from Contains
 
 !opexit

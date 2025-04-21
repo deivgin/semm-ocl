@@ -1,6 +1,12 @@
 context Task inv idRequired:
   self.id <> null and self.id <> ''
 
+context Task inv uniqueID:
+  Task.allInstances()->
+    forAll(t1, t2 | t1 <> t2 implies t1.id <> t2.id)
+
+context Task inv validTitle: self.title.size() > 0
+
 context Task :: changeStatus(status: Status)
   post: self.status = status
 

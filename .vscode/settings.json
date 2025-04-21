@@ -1,3 +1,9 @@
 {
-  "cSpell.words": ["endpackage", "Postcondition", "Teammember"]
+  "cSpell.words": [
+    "endpackage",
+    "openter",
+    "opexit",
+    "Postcondition",
+    "Teammember"
+  ]
 }

@@ -37,12 +37,6 @@ operations
       dayOfYear - daysBeforeMonth
 end
 
-class Item
-attributes
-  text: String
-  checked: Boolean
-end
-
 class Note
 attributes
   text: String
@@ -70,8 +64,6 @@ attributes
   priority: Priority
   status: Status
   dueDate: Integer
-  checklist: Set(Item)
-  notes: Set(Note)
 operations
   changeStatus(status: Status)
   changePriority(priority: Priority)
@@ -79,11 +71,6 @@ operations
   isOverdue(): Boolean
   assignToProject(project: Project)
   removeFromProject(project: Project)
-  createNote(note: Note)
-  removeNote(note: Note)
-  addItem(item: Item)
-  checkItem(item: Item)
-  removeItem(item: Item)
 end
 
 class User
@@ -123,6 +110,12 @@ context Project inv idRequired:
 
 context Task inv idRequired:
   self.id <> null and self.id <> ''
+
+context Task inv uniqueID:
+  Task.allInstances()->
+    forAll(t1, t2 | t1 <> t2 implies t1.id <> t2.id)
+
+context Task inv validTitle: self.title.size() > 0
 
 context Task :: changeStatus(status: Status)
   post: self.status = status
