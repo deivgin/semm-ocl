@@ -7,10 +7,4 @@ attributes
   status: Status
   projectId: String
   dueDate: Date
-operations
-  updateTitle(title: String)
-  updateDescription(description: String)
-  setPriority(priority: Priority)
-  setStatus(status: Status)
-  setDueDate(date: Date)
 end

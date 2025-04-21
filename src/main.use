@@ -14,12 +14,25 @@ enum Status {open, in_progress, done}
 
 class Date
 attributes
+  -- stores date in days since epoch (Jan 1, 1970)
   now: Integer
 operations
-  year() : Integer
-  month() : Integer
-  day() : Integer
-  days() : Integer = self.now
+  -- Returns the year (4 digits)
+  year() : Integer = 1970 + (self.now div 365)
+
+  -- Returns the month (1-12)
+  month() : Integer =
+    let dayOfYear: Integer = self.now - ((self.year() - 1970) * 365)
+    in
+      (dayOfYear * 12 div 365) + 1
+
+  -- Returns the day of month (1-31)
+  day() : Integer =
+    let dayOfYear: Integer = self.now - ((self.year() - 1970) * 365),
+        monthVal: Integer = self.month(),
+        daysBeforeMonth: Integer = ((monthVal - 1) * 365) div 12
+    in
+      dayOfYear - daysBeforeMonth
 end
 
 class Project
@@ -29,8 +42,6 @@ attributes
   description: String
   startDate: Date
   endDate: Date
-operations
-  getDuration(): Integer
 end
 
 class Task
@@ -42,12 +53,6 @@ attributes
   status: Status
   projectId: String
   dueDate: Date
-operations
-  updateTitle(title: String)
-  updateDescription(description: String)
-  setPriority(priority: Priority)
-  setStatus(status: Status)
-  setDueDate(date: Date)
 end
 
 class User
@@ -57,9 +62,6 @@ attributes
   email: String
   projects: Set(Project)
   tasks: Set(Task)
-operations
-  getProjects(): Set(Project) = self.projects
-  setName(name: String)
 end
 
 -- ==============================
@@ -89,9 +91,6 @@ constraints
 
 context Project inv idRequired:
   self.id <> null and self.id <> ''
-
-context Project inv validDates:
-  self.startDate.days() <= self.endDate.days()
 
 context Task inv idRequired: self.id <> null and self.id <> ''
 

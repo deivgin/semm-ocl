@@ -5,6 +5,4 @@ attributes
   description: String
   startDate: Date
   endDate: Date
-operations
-  getDuration(): Integer
 end
