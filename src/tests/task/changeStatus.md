@@ -9,6 +9,6 @@
 
 -- check test case
 
-!openter task1 changePriority(Priority::High)
-!set task1.priority := Priority::High
+!openter task1 changeStatus(Status::InProgress)
+!set task.status := Status:InProgress
 !opexit

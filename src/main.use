@@ -108,14 +108,18 @@ constraints
 context Project inv idRequired:
   self.id <> null and self.id <> ''
 
-context Task inv idRequired:
-  self.id <> null and self.id <> ''
-
-context Task inv uniqueID:
-  Task.allInstances()->
-    forAll(t1, t2 | t1 <> t2 implies t1.id <> t2.id)
-
-context Task inv validTitle: self.title.size() > 0
+context Task
+  inv idRequired:
+    self.id <> null and self.id <> ''
+  inv uniqueID:
+    Task.allInstances()->
+      forAll(t1, t2 | t1 <> t2 implies t1.id <> t2.id)
+  inv validTitle:
+    self.title.size() > 0
+  inv importantTasksHaveDueDate:
+    self.priority = Priority::High implies self.dueDate <> null
+  inv mustHaveStatus:
+    self.status <> null
 
 context Task :: changeStatus(status: Status)
   post: self.status = status
