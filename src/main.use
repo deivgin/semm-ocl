@@ -4,9 +4,9 @@ model Untangle
 -- ENUMERATIONS
 -- ==============================
 
-enum Priority {low, medium, high}
+enum Priority {Low, Medium, High}
 
-enum Status {open, in_progress, done}
+enum Status {Open, InProgress, Done}
 
 -- ==============================
 -- CLASSES
@@ -17,6 +17,8 @@ attributes
   -- stores date in days since epoch (Jan 1, 1970)
   now: Integer
 operations
+  init(d: Integer)
+
   -- Returns the year (4 digits)
   year() : Integer = 1970 + (self.now div 365)
 
@@ -51,8 +53,15 @@ attributes
   description: String
   priority: Priority
   status: Status
-  projectId: String
-  dueDate: Date
+  dueDate: Integer
+operations
+  changeStatus(status: Status)
+  changePriority(priority: Priority)
+  getProject(): Project
+  setDueDate(dueDate: Integer)
+  isOverdue(): Boolean
+  assignToProject(project: Project)
+  removeFromProject(project: Project)
 end
 
 class User
@@ -60,8 +69,6 @@ attributes
   id: String
   name: String
   email: String
-  projects: Set(Project)
-  tasks: Set(Task)
 end
 
 -- ==============================
@@ -79,8 +86,8 @@ association Manages between
 end
 
 association Contains between
-  Task [0..1] role project
-  Project [*] role tasks
+  Task [*] role task
+  Project [0..1] role project
 end
 
 -- ==============================
@@ -92,7 +99,37 @@ constraints
 context Project inv idRequired:
   self.id <> null and self.id <> ''
 
-context Task inv idRequired: self.id <> null and self.id <> ''
+context Task inv idRequired:
+  self.id <> null and self.id <> ''
+
+context Task :: changeStatus(status: Status)
+  post: self.status = status
+
+context Task :: changePriority(priority: Priority)
+  post: self.priority = priority
+
+context Task :: getProject(): Project
+  post: result = self.project
+
+context Task :: setDueDate(dueDate: Integer)
+  post: self.dueDate = dueDate
+
+context Task :: isOverdue(): Boolean
+  pre: self.dueDate <> null
+  post: let currentDate: Date = Date.allInstances()->any(d | d.now = 20199),
+        taskDate: Integer = self.dueDate
+        in
+        result = currentDate.now > taskDate
+
+context Task :: assignToProject(project: Project)
+  pre: project.isDefined()
+  post: self.project = project
+  post: project.task->includes(self)
+
+context Task :: removeFromProject(project: Project)
+  pre: project.isDefined()
+  post: project.task->includes(self)
+  post: project.task->excludes(self)
 
 context User inv idRequired: self.id <> null and self.id <> ''
 

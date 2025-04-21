@@ -1,1 +1,28 @@
-context Task inv idRequired: self.id <> null and self.id <> ''
+context Task inv idRequired:
+  self.id <> null and self.id <> ''
+
+context Task :: changeStatus(status: Status)
+  post: self.status = status
+
+context Task :: changePriority(priority: Priority)
+  post: self.priority = priority
+
+context Task :: setDueDate(dueDate: Integer)
+  post: self.dueDate = dueDate
+
+context Task :: isOverdue(): Boolean
+  pre: self.dueDate <> null
+  post: let currentDate: Date = Date.allInstances()->any(d | d.now = 20199),
+        taskDate: Integer = self.dueDate
+        in
+        result = currentDate.now > taskDate
+
+context Task :: assignToProject(project: Project)
+  pre: project.isDefined()
+  post: self.project = project
+  post: project.task->includes(self)
+
+context Task :: removeFromProject(project: Project)
+  pre: project.isDefined()
+  post: project.task->includes(self)
+  post: project.task->excludes(self)

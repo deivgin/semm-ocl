@@ -5,6 +5,12 @@ attributes
   description: String
   priority: Priority
   status: Status
-  projectId: String
-  dueDate: Date
+  dueDate: Integer
+operations
+  changeStatus(status: Status)
+  changePriority(priority: Priority)
+  setDueDate(dueDate: Integer)
+  isOverdue(): Boolean
+  assignToProject(project: Project)
+  removeFromProject(project: Project)
 end

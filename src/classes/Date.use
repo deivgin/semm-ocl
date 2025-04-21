@@ -3,6 +3,8 @@ attributes
   -- stores date in days since epoch (Jan 1, 1970)
   now: Integer
 operations
+  init(d: Integer)
+
   -- Returns the year (4 digits)
   year() : Integer = 1970 + (self.now div 365)
 

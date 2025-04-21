@@ -3,6 +3,4 @@ attributes
   id: String
   name: String
   email: String
-  projects: Set(Project)
-  tasks: Set(Task)
 end
