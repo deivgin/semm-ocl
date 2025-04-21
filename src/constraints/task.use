@@ -24,5 +24,5 @@ context Task :: assignToProject(project: Project)
 
 context Task :: removeFromProject(project: Project)
   pre: project.isDefined()
-  post: project.task->includes(self)
+  pre: project.task->includes(self)
   post: project.task->excludes(self)

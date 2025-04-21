@@ -1,0 +1,5 @@
+class Item
+attributes
+  text: String
+  checked: Boolean
+end

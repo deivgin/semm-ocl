@@ -6,6 +6,8 @@ attributes
   priority: Priority
   status: Status
   dueDate: Integer
+  checklist: Set(Item)
+  notes: Set(Note)
 operations
   changeStatus(status: Status)
   changePriority(priority: Priority)
@@ -13,4 +15,9 @@ operations
   isOverdue(): Boolean
   assignToProject(project: Project)
   removeFromProject(project: Project)
+  createNote(note: Note)
+  removeNote(note: Note)
+  addItem(item: Item)
+  checkItem(item: Item)
+  removeItem(item: Item)
 end

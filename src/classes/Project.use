@@ -3,6 +3,9 @@ attributes
   id: String
   title: String
   description: String
-  startDate: Date
-  endDate: Date
+  startDate: Integer
+  endDate: Integer
+operations
+  addTask(task: Task)
+  removeTask(task: Task)
 end

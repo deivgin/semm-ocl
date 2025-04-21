@@ -1,0 +1,6 @@
+class Note
+attributes
+  text: String
+  createdAt: Integer
+  updatedAt: Integer
+end
