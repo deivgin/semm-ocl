@@ -5,3 +5,4 @@
 !set project1.description := 'Project1 description'
 !set project1.startDate := 20220
 !set project1.endDate := 20320
+!set project1.sprints := Sequence{}

@@ -64,7 +64,6 @@ operations
   createNewSprint(): Integer
   addTaskToSprint(task: Task, sprintIndex: Integer)
   removeTaskFromSprint(task: Task, sprintIndex: Integer)
-  -- QUERY: find high priority tasks in this project
   highPriorityTasks() : Set(Task) =
     self.task->select(t | t.priority = Priority::High)
 end
