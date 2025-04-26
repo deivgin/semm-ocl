@@ -120,157 +120,202 @@ constraints
 
 context Project
   inv uniqueId:
+    -- Ensures that all projects have unique identifiers to prevent duplicates
     Project.allInstances()->forAll(p1, p2 | p1 <> p2 implies p1.id <> p2.id)
 
   inv validTitle:
+    -- Ensures that project title is not empty, as titles are required for identification
     self.title.size() > 0
 
   inv validDateRange:
+    -- Ensures that project has a valid timeframe (end date must be after start date)
     self.endDate > self.startDate
 
   inv startDateExists:
+    -- Ensures that all projects have a defined start date
     not self.startDate.oclIsUndefined()
 
   inv endDateExists:
+    -- Ensures that all projects have a defined end date for proper planning
     not self.endDate.oclIsUndefined()
 
   inv chronologicalHistory:
+    -- Ensures that project history events are ordered chronologically by date
     self.history->asSequence() = self.history->asOrderedSet()->sortedBy(h | h.date)
 
   inv noTasksWithSameId:
+    -- Ensures that all tasks within a project have unique IDs
     self.task->isUnique(id)
 
   inv allTasksHaveTitles:
+    -- Ensures that every task in the project has a non-empty title
     self.task->forAll(t | t.title.size() > 0)
 
   inv limitHighPriorityTasks:
+    -- Limits the number of high priority tasks to 5 to maintain focus and prevent priority inflation
     self.task->select(t | t.priority = Priority::High)->size() <= 5
 
   inv uniqueTasksInSprints:
-    -- Each task should appear in at most one sprint
+    -- Ensures that each task can only be in one sprint at a time
     self.sprints->forAll(s1, s2 |
       s1 <> s2 implies s1->intersection(s2)->isEmpty()
     )
 
 context Project::addTask(task : Task)
   pre taskExists:
+    -- Ensures the task parameter is not null before adding to project
     not task.oclIsUndefined()
 
   pre taskNotAlreadyAdded:
+    -- Prevents adding duplicate tasks to the project
     not self.task->includes(task)
 
   pre taskDeadlineWithinProject:
+    -- Ensures the task's due date is within the project's timeframe
     task.dueDate.oclIsUndefined() or task.dueDate <= self.endDate
 
   post taskAdded:
+    -- Verifies that the task has been successfully added to the project
     self.task->includes(task)
 
   post taskSizeIncrease:
+    -- Ensures that the number of tasks has increased by exactly one
     self.task->size() = self.task@pre->size() + 1
 
 context Project::removeTask(task : Task)
   pre taskExists:
+    -- Ensures the task parameter is not null before attempting removal
     not task.oclIsUndefined()
 
   pre taskIsInProject:
+    -- Ensures the task is actually in the project before removing it
     self.task->includes(task)
 
   post taskIsRemoved:
+    -- Verifies that the task has been successfully removed from the project
+    -- and the collection size has decreased by exactly one
     not self.task->includes(task) and
     self.task->size() = self.task@pre->size() - 1
 
 context Project::logAction(action : String)
   pre actionNotExists:
+    -- Prevents duplicate actions from being added to the history
     not self.history->includes(Tuple{date = 20222, action = 'Create'})
 
   post actionAdded:
+    -- Verifies that the action was successfully added to the project history
     self.history->includes(Tuple{date = 20222, action = 'Create'})
 
 context Project::addTaskToSprint(task : Task, sprintIndex : Integer)
   pre taskBelongsToProject:
+    -- Ensures the task is part of the project before adding to sprint
     self.task->includes(task)
 
   pre validSprintIndex:
+    -- Ensures the sprint index is valid (exists in the sprints collection)
     sprintIndex >= 1 and sprintIndex <= self.sprints->size()
 
   pre taskNotInAnySprintYet:
+    -- Prevents a task from being in multiple sprints simultaneously
     self.sprints->forAll(sprint | not sprint->includes(task))
 
   post taskAddedToSprint:
+    -- Verifies that the task has been successfully added to the specified sprint
     self.sprints->at(sprintIndex)->includes(task)
 
   post otherSprintsUnchanged:
+    -- Ensures that only the specified sprint was modified, all others remain unchanged
     Sequence{1..self.sprints->size()}->excluding(sprintIndex)->forAll(i |
       self.sprints->at(i) = self.sprints@pre->at(i)
     )
 
 context Project::removeTaskFromSprint(task : Task, sprintIndex : Integer)
   pre validSprintIndex:
+    -- Ensures the sprint index is valid (exists in the sprints collection)
     sprintIndex >= 1 and sprintIndex <= self.sprints->size()
 
   pre taskInSpecifiedSprint:
+    -- Ensures the task is actually in the specified sprint before removing
     self.sprints->at(sprintIndex)->includes(task)
 
   post taskRemovedFromSprint:
+    -- Verifies that the task has been successfully removed from the sprint
     not self.sprints->at(sprintIndex)->includes(task)
 
   post otherSprintsUnchanged:
+    -- Ensures that only the specified sprint was modified, all others remain unchanged
     Sequence{1..self.sprints->size()}->excluding(sprintIndex)->forAll(i |
       self.sprints->at(i) = self.sprints@pre->at(i)
     )
 
 context Project::createNewSprint() : Integer
   post sprintCreated:
+    -- Verifies that a new sprint has been added to the sequence of sprints
     self.sprints->size() = self.sprints@pre->size() + 1
 
   post newSprintIsEmpty:
+    -- Ensures that the newly created sprint starts empty without tasks
     self.sprints->at(self.sprints->size())->isEmpty()
 
   post returnsNewSprintIndex:
+    -- Ensures the operation returns the index of the newly created sprint
     result = self.sprints->size()
 
 context Task
   inv idRequired:
+    -- Ensures that all tasks have a non-empty identifier for tracking
     not self.id.oclIsUndefined() and self.id <> ''
 
   inv uniqueID:
+    -- Ensures that all tasks in the system have unique identifiers
     Task.allInstances()->forAll(t1, t2 | t1 <> t2 implies t1.id <> t2.id)
 
   inv validTitle:
+    -- Ensures that all tasks have a non-empty title for identification
     self.title.size() > 0
 
   inv importantTasksHaveDueDate:
+    -- Ensures that high priority tasks always have a specified deadline
     self.priority = Priority::High implies not self.dueDate.oclIsUndefined()
 
   inv mustHaveStatus:
+    -- Ensures that all tasks have a defined status for tracking progress
     not self.status.oclIsUndefined()
 
   inv highPriorityTasksHaveProjectAssigned:
+    -- Ensures high priority tasks are always assigned to a project for accountability
     self.priority = Priority::High implies not self.project.oclIsUndefined()
 
 
 context Task::changeStatus(status : Status)
   post statusChanged:
+    -- Confirms that the status has been updated to the new value
     self.status = status
 
   post oldStatusDifferent:
+    -- Ensures that the status has actually changed (not just set to same value)
     self.status <> self.status@pre
 
 context Task::changePriority(priority : Priority)
   post priorityChanged:
+    -- Confirms that the priority has been updated to the new value
     self.priority = priority
 
   post oldPriorityDifferent:
+    -- Ensures that the priority has actually changed (not just set to same value)
     self.priority <> self.priority@pre
 
 context Task::isOverdue() : Boolean
   pre notAlreadyDone:
+    -- Only checks overdue status for tasks that are not already completed
     self.status <> Status::Done
 
   pre hasDueDate:
+    -- Ensures that the task has a due date that can be checked against
     not self.dueDate.oclIsUndefined()
 
   post dueDateInThePast:
+    -- Determines if the task is overdue by comparing its due date with current date
     let currentDate : Date = Date.allInstances()->any(d | d.now = 20199),
         taskDate : Integer = self.dueDate
     in
@@ -278,28 +323,36 @@ context Task::isOverdue() : Boolean
 
 context Task::assignToProject(project : Project)
   pre taskNotInProject:
+    -- Ensures task is not already assigned to another project
     self.project.oclIsUndefined()
 
   post connectionCreated:
+    -- Verifies the bidirectional association is established from project side
     project.task->includes(self)
 
   post projectSet:
+    -- Verifies the bidirectional association is established from task side
     self.project = project
 
 context Task::removeFromProject(project : Project)
   pre taskIsInProject:
+    -- Ensures the task is actually in the specified project before removing
     project.task->includes(self)
 
   post taskIsRemoved:
+    -- Verifies the bidirectional association is removed from project side
     not project.task->includes(self)
 
   post projectUnset:
+    -- Verifies the bidirectional association is removed from task side
     self.project.oclIsUndefined()
 
 context User
   inv idRequired:
+    -- Ensures that all users have a non-empty identifier
     not self.id.oclIsUndefined() and self.id <> ''
 
   inv emailRequired:
+    -- Ensures that all users have a valid email address for communication
     not self.email.oclIsUndefined() and self.email <> ''
 
