@@ -12,25 +12,32 @@ context Task
     self.status <> null
 
 context Task :: changeStatus(status: Status)
-  post statusChanged: self.status = status
-  post oldStatusDifferent: self.status <> self.status@pre
+  post statusChanged:
+    self.status = status
+  post oldStatusDifferent:
+    self.status <> self.status@pre
 
 context Task :: changePriority(priority: Priority)
-  post priorityChanged: self.priority = priority
-  post oldPriorityDifferent: self.priority <> self.priority@pre
+  post priorityChanged:
+    self.priority = priority
+  post oldPriorityDifferent:
+    self.priority <> self.priority@pre
 
 context Task :: isOverdue(): Boolean
-  pre shouldContainDueDate: self.dueDate <> null
-  post dueDateInThePast: let currentDate: Date = Date.allInstances()->any(d | d.now = 20199),
+  pre shouldContainDueDate:
+    self.dueDate <> null
+  post dueDateInThePast:
+    let currentDate: Date = Date.allInstances()->any(d | d.now = 20199),
         taskDate: Integer = self.dueDate
         in
         result = currentDate.now > taskDate
 
 context Task :: assignToProject(project: Project)
-  pre projectDefined: project.isDefined()
-  post connectionCreated: project.task->includes(self)
+  post connectionCreated:
+    project.task -> includes(self)
 
 context Task :: removeFromProject(project: Project)
-  pre projectDefined: project.isDefined()
-  pre taskIsInProject: project.task->includes(self)
-  post taskIsRemoved: project.task->excludes(self)
+  pre taskIsInProject:
+    project.task -> includes(self)
+  post taskIsRemoved:
+    project.task -> excludes(self)

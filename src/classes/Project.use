@@ -5,7 +5,9 @@ attributes
   description: String
   startDate: Integer
   endDate: Integer
+  history: Set(Tuple(date:Integer,action:String))
 operations
   addTask(task: Task)
   removeTask(task: Task)
+  logAction(action: String)
 end

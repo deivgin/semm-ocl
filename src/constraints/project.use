@@ -1,2 +1,38 @@
-context Project inv idRequired:
-  self.id <> null and self.id <> ''
+context Project
+  inv uniqueId:
+    Project.allInstances()->forAll(p1, p2 | p1 <> p2 implies p1.id <> p2.id)
+  inv validTitle:
+    self.title.size() > 0
+  inv validDateRange:
+    self.endDate > self.startDate
+  inv startDateExists:
+    self.startDate <> null
+  inv endDateExists:
+    self.endDate <> null
+  inv chronologicalHistory:
+    self.history->asSequence() = self.history->asOrderedSet() -> sortedBy(h | h.date)
+
+context Project :: addTask(task: Task)
+  post taskAdded:
+    self.task->includes(task)
+  post taskSizeIncrease:
+    self.task->size() = self.task@pre -> size() + 1
+
+context Project :: removeTask(task: Task)
+  post taskIsInProject:
+    self.task->includes(task)
+  post taskIsRemoved:
+    self.task->excludes(task) and
+    self.task->size() = self.task@pre->size() - 1
+
+context Project :: logAction(action: String)
+  pre noAction:
+    self.history->excludes(Tuple{
+      date: 20222,
+      action: 'Create'
+      })
+  post actionAdded:
+    self.task->excludes(Tuple{
+      date: 20222,
+      action: 'Create'
+      })

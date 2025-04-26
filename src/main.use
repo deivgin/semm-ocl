@@ -51,9 +51,11 @@ attributes
   description: String
   startDate: Integer
   endDate: Integer
+  history: Set(Tuple(date:Integer,action:String))
 operations
   addTask(task: Task)
   removeTask(task: Task)
+  logAction(action: String)
 end
 
 class Task
@@ -104,8 +106,44 @@ end
 
 constraints
 
-context Project inv idRequired:
-  self.id <> null and self.id <> ''
+context Project
+  inv uniqueId:
+    Project.allInstances()->forAll(p1, p2 | p1 <> p2 implies p1.id <> p2.id)
+  inv validTitle:
+    self.title.size() > 0
+  inv validDateRange:
+    self.endDate > self.startDate
+  inv startDateExists:
+    self.startDate <> null
+  inv endDateExists:
+    self.endDate <> null
+  inv chronologicalHistory:
+    self.history->asSequence() = self.history->asOrderedSet() -> sortedBy(h | h.date)
+
+context Project :: addTask(task: Task)
+  post taskAdded:
+    self.task->includes(task)
+  post taskSizeIncrease:
+    self.task->size() = self.task@pre -> size() + 1
+
+context Project :: removeTask(task: Task)
+  post taskIsInProject:
+    self.task->includes(task)
+  post taskIsRemoved:
+    self.task->excludes(task) and
+    self.task->size() = self.task@pre->size() - 1
+
+context Project :: logAction(action: String)
+  pre noAction:
+    self.history->excludes(Tuple{
+      date: 20222,
+      action: 'Create'
+      })
+  post actionAdded:
+    self.task->excludes(Tuple{
+      date: 20222,
+      action: 'Create'
+      })
 
 context Task
   inv idRequired:
@@ -121,28 +159,35 @@ context Task
     self.status <> null
 
 context Task :: changeStatus(status: Status)
-  post statusChanged: self.status = status
-  post oldStatusDifferent: self.status <> self.status@pre
+  post statusChanged:
+    self.status = status
+  post oldStatusDifferent:
+    self.status <> self.status@pre
 
 context Task :: changePriority(priority: Priority)
-  post priorityChanged: self.priority = priority
-  post oldPriorityDifferent: self.priority <> self.priority@pre
+  post priorityChanged:
+    self.priority = priority
+  post oldPriorityDifferent:
+    self.priority <> self.priority@pre
 
 context Task :: isOverdue(): Boolean
-  pre shouldContainDueDate: self.dueDate <> null
-  post dueDateInThePast: let currentDate: Date = Date.allInstances()->any(d | d.now = 20199),
+  pre shouldContainDueDate:
+    self.dueDate <> null
+  post dueDateInThePast:
+    let currentDate: Date = Date.allInstances()->any(d | d.now = 20199),
         taskDate: Integer = self.dueDate
         in
         result = currentDate.now > taskDate
 
 context Task :: assignToProject(project: Project)
-  pre projectDefined: project.isDefined()
-  post connectionCreated: project.task->includes(self)
+  post connectionCreated:
+    project.task -> includes(self)
 
 context Task :: removeFromProject(project: Project)
-  pre projectDefined: project.isDefined()
-  pre taskIsInProject: project.task->includes(self)
-  post taskIsRemoved: project.task->excludes(self)
+  pre taskIsInProject:
+    project.task -> includes(self)
+  post taskIsRemoved:
+    project.task -> excludes(self)
 
 context User inv idRequired: self.id <> null and self.id <> ''
 
