@@ -3,22 +3,26 @@ attributes
   -- stores date in days since epoch (Jan 1, 1970)
   now: Integer
 operations
-  init(d: Integer)
-
   -- Returns the year (4 digits)
-  year() : Integer = 1970 + (self.now div 365)
+  year(): Integer = 1970 + (self.now div 365)
 
   -- Returns the month (1-12)
-  month() : Integer =
+  month(): Integer =
     let dayOfYear: Integer = self.now - ((self.year() - 1970) * 365)
     in
       (dayOfYear * 12 div 365) + 1
 
   -- Returns the day of month (1-31)
-  day() : Integer =
+  day(): Integer =
     let dayOfYear: Integer = self.now - ((self.year() - 1970) * 365),
         monthVal: Integer = self.month(),
         daysBeforeMonth: Integer = ((monthVal - 1) * 365) div 12
     in
       dayOfYear - daysBeforeMonth
+
+  -- Returns true if this date is a weekend
+  isWeekend(): Boolean =
+    let dayOfWeek: Integer = self.now.mod(7)
+    in
+      dayOfWeek = 0 or dayOfWeek = 6
 end

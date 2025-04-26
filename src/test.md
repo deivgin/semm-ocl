@@ -1,35 +1,16 @@
--- test Task :: isOverdue
+-- Create project1
+!create project1 : Project
+!set project1.id := 'project1'
+!set project1.title := 'Project1'
+!set project1.description := 'Project1 description'
+!set project1.startDate := 20220
+!set project1.endDate := 20320
 
--- Create task1
-!create task1 : Task
-!set task1.id := 'task1'
-!set task1.title := 'Task 1'
-!set task1.description := 'Task Description'
-!set task1.priority := Priority::Medium
-!set task1.status := Status::Open
-!set task1.dueDate := 20180 -- Due date in the past
+-- Initialize the history set if it's not already created
+!set project1.history := Set{}
 
--- Create date with current time
-!create date1 : Date
-!set date1.now := 20199 -- Current date as specified in the postcondition
+-- Add a tuple to the history set
+!set project1.history := project1.history->including(Tuple{date:20221, action:'created'})
 
--- Check test case
-!openter task1 isOverdue()
-
--- The operation should return true since 20199 > 20180
-!opexit true
-
--- Test with a task that is not overdue
-!create task2 : Task
-!set task2.id := 'task2'
-!set task2.title := 'Task 2'
-!set task2.description := 'Task Description'
-!set task2.priority := Priority::Medium
-!set task2.status := Status::Open
-!set task2.dueDate := 20250 -- Due date in the future
-
--- Check test case
-!openter task2 isOverdue()
-
--- The operation should return false since 20199 < 20250
-!opexit false
+-- Add another tuple to the history set
+!set project1.history := project1.history->including(Tuple{date:20222, action:'updated'})

@@ -17,24 +17,28 @@ attributes
   -- stores date in days since epoch (Jan 1, 1970)
   now: Integer
 operations
-  init(d: Integer)
-
   -- Returns the year (4 digits)
-  year() : Integer = 1970 + (self.now div 365)
+  year(): Integer = 1970 + (self.now div 365)
 
   -- Returns the month (1-12)
-  month() : Integer =
+  month(): Integer =
     let dayOfYear: Integer = self.now - ((self.year() - 1970) * 365)
     in
       (dayOfYear * 12 div 365) + 1
 
   -- Returns the day of month (1-31)
-  day() : Integer =
+  day(): Integer =
     let dayOfYear: Integer = self.now - ((self.year() - 1970) * 365),
         monthVal: Integer = self.month(),
         daysBeforeMonth: Integer = ((monthVal - 1) * 365) div 12
     in
       dayOfYear - daysBeforeMonth
+
+  -- Returns true if this date is a weekend
+  isWeekend(): Boolean =
+    let dayOfWeek: Integer = self.now.mod(7)
+    in
+      dayOfWeek = 0 or dayOfWeek = 6
 end
 
 class Note
@@ -56,6 +60,10 @@ operations
   addTask(task: Task)
   removeTask(task: Task)
   logAction(action: String)
+
+  -- QUERY: find high priority tasks in this project
+  highPriorityTasks() : Set(Task) =
+    self.task->select(t | t.priority = Priority::High)
 end
 
 class Task
@@ -72,6 +80,12 @@ operations
   isOverdue(): Boolean
   assignToProject(project: Project)
   removeFromProject(project: Project)
+
+  -- Add new operations with pre/post conditions
+  addTag(tag: String)
+  removeTag(tag: String)
+  addDependency(task: Task)
+  removeDependency(task: Task)
 end
 
 class User
@@ -119,15 +133,30 @@ context Project
     self.endDate <> null
   inv chronologicalHistory:
     self.history->asSequence() = self.history->asOrderedSet() -> sortedBy(h | h.date)
+  inv noTasksWithSameId:
+    self.task->isUnique(id)
+  inv allTasksHaveTitles:
+    self.task->forAll(t | t.title.size() > 0)
+  inv limitHighPriorityTasks:
+    self.task->collect(t | t.priority)->select(p | p = Priority::High)->size() <= 5
+
 
 context Project :: addTask(task: Task)
+  pre taskExists:
+    task <> null
+  pre taskNotAlreadyAdded:
+    not self.task->includes(task)
+  pre taskDeadlineWithinProject:
+    task.dueDate = null or task.dueDate <= self.endDate
   post taskAdded:
     self.task->includes(task)
   post taskSizeIncrease:
     self.task->size() = self.task@pre -> size() + 1
 
 context Project :: removeTask(task: Task)
-  post taskIsInProject:
+  pre taskExists:
+    task <> null
+  pre taskIsInProject:
     self.task->includes(task)
   post taskIsRemoved:
     self.task->excludes(task) and
@@ -140,7 +169,7 @@ context Project :: logAction(action: String)
       action: 'Create'
       })
   post actionAdded:
-    self.task->excludes(Tuple{
+    self.history->includes(Tuple{
       date: 20222,
       action: 'Create'
       })
@@ -157,6 +186,9 @@ context Task
     self.priority = Priority::High implies self.dueDate <> null
   inv mustHaveStatus:
     self.status <> null
+  inv highPriorityTasksHaveProjectAssigned:
+    self.priority = Priority::High implies self.project <> null
+
 
 context Task :: changeStatus(status: Status)
   post statusChanged:
@@ -171,6 +203,8 @@ context Task :: changePriority(priority: Priority)
     self.priority <> self.priority@pre
 
 context Task :: isOverdue(): Boolean
+  pre notAlreadyDone:
+    self.status <> Status::Done
   pre shouldContainDueDate:
     self.dueDate <> null
   post dueDateInThePast:
@@ -180,14 +214,20 @@ context Task :: isOverdue(): Boolean
         result = currentDate.now > taskDate
 
 context Task :: assignToProject(project: Project)
+  pre taskNotInProject:
+    self.project = null
   post connectionCreated:
-    project.task -> includes(self)
+    project.task->includes(self)
+  post projectSet:
+    self.project = project
 
 context Task :: removeFromProject(project: Project)
   pre taskIsInProject:
-    project.task -> includes(self)
+    project.task->includes(self)
   post taskIsRemoved:
-    project.task -> excludes(self)
+    project.task->excludes(self)
+  post projectUnset:
+    self.project = null
 
 context User inv idRequired: self.id <> null and self.id <> ''
 

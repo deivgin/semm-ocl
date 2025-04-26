@@ -11,15 +11,30 @@ context Project
     self.endDate <> null
   inv chronologicalHistory:
     self.history->asSequence() = self.history->asOrderedSet() -> sortedBy(h | h.date)
+  inv noTasksWithSameId:
+    self.task->isUnique(id)
+  inv allTasksHaveTitles:
+    self.task->forAll(t | t.title.size() > 0)
+  inv limitHighPriorityTasks:
+    self.task->collect(t | t.priority)->select(p | p = Priority::High)->size() <= 5
+
 
 context Project :: addTask(task: Task)
+  pre taskExists:
+    task <> null
+  pre taskNotAlreadyAdded:
+    not self.task->includes(task)
+  pre taskDeadlineWithinProject:
+    task.dueDate = null or task.dueDate <= self.endDate
   post taskAdded:
     self.task->includes(task)
   post taskSizeIncrease:
     self.task->size() = self.task@pre -> size() + 1
 
 context Project :: removeTask(task: Task)
-  post taskIsInProject:
+  pre taskExists:
+    task <> null
+  pre taskIsInProject:
     self.task->includes(task)
   post taskIsRemoved:
     self.task->excludes(task) and
@@ -32,7 +47,7 @@ context Project :: logAction(action: String)
       action: 'Create'
       })
   post actionAdded:
-    self.task->excludes(Tuple{
+    self.history->includes(Tuple{
       date: 20222,
       action: 'Create'
       })

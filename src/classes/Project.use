@@ -10,4 +10,8 @@ operations
   addTask(task: Task)
   removeTask(task: Task)
   logAction(action: String)
+
+  -- QUERY: find high priority tasks in this project
+  highPriorityTasks() : Set(Task) =
+    self.task->select(t | t.priority = Priority::High)
 end

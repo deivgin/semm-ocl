@@ -10,6 +10,9 @@ context Task
     self.priority = Priority::High implies self.dueDate <> null
   inv mustHaveStatus:
     self.status <> null
+  inv highPriorityTasksHaveProjectAssigned:
+    self.priority = Priority::High implies self.project <> null
+
 
 context Task :: changeStatus(status: Status)
   post statusChanged:
@@ -24,6 +27,8 @@ context Task :: changePriority(priority: Priority)
     self.priority <> self.priority@pre
 
 context Task :: isOverdue(): Boolean
+  pre notAlreadyDone:
+    self.status <> Status::Done
   pre shouldContainDueDate:
     self.dueDate <> null
   post dueDateInThePast:
@@ -33,11 +38,17 @@ context Task :: isOverdue(): Boolean
         result = currentDate.now > taskDate
 
 context Task :: assignToProject(project: Project)
+  pre taskNotInProject:
+    self.project = null
   post connectionCreated:
-    project.task -> includes(self)
+    project.task->includes(self)
+  post projectSet:
+    self.project = project
 
 context Task :: removeFromProject(project: Project)
   pre taskIsInProject:
-    project.task -> includes(self)
+    project.task->includes(self)
   post taskIsRemoved:
-    project.task -> excludes(self)
+    project.task->excludes(self)
+  post projectUnset:
+    self.project = null

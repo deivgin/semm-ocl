@@ -12,4 +12,10 @@ operations
   isOverdue(): Boolean
   assignToProject(project: Project)
   removeFromProject(project: Project)
+
+  -- Add new operations with pre/post conditions
+  addTag(tag: String)
+  removeTag(tag: String)
+  addDependency(task: Task)
+  removeDependency(task: Task)
 end
