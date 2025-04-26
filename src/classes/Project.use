@@ -1,19 +1,19 @@
 class Project
 attributes
-  id: String
-  title: String
-  description: String
-  startDate: Integer
-  endDate: Integer
-  history: Set(Tuple(date:Integer,action:String))
-  sprints: Sequence(Set(Task))
+  id : String
+  title : String
+  description : String
+  startDate : Integer
+  endDate : Integer
+  history : Set(Tuple(date:Integer, action:String))
+  sprints : Sequence(Set(Task))
 operations
-  addTask(task: Task)
-  removeTask(task: Task)
-  logAction(action: String)
-  createNewSprint(): Integer
-  addTaskToSprint(task: Task, sprintIndex: Integer)
-  removeTaskFromSprint(task: Task, sprintIndex: Integer)
+  addTask(task : Task)
+  removeTask(task : Task)
+  logAction(action : String)
+  createNewSprint() : Integer
+  addTaskToSprint(task : Task, sprintIndex : Integer)
+  removeTaskFromSprint(task : Task, sprintIndex : Integer)
   highPriorityTasks() : Set(Task) =
     self.task->select(t | t.priority = Priority::High)
 end
