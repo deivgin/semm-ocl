@@ -17,6 +17,12 @@ context Project
     self.task->forAll(t | t.title.size() > 0)
   inv limitHighPriorityTasks:
     self.task->collect(t | t.priority)->select(p | p = Priority::High)->size() <= 5
+  inv uniqueTasksInSprints:
+    -- Each task should appear in at most one sprint
+    self.sprints->forAll(s1, s2 |
+      s1 <> s2 implies s1->intersection(s2)->isEmpty()
+    )
+
 
 
 context Project :: addTask(task: Task)
@@ -51,3 +57,37 @@ context Project :: logAction(action: String)
       date: 20222,
       action: 'Create'
       })
+
+context Project :: addTaskToSprint(task: Task, sprintIndex: Integer)
+  pre taskBelongsToProject:
+    self.task->includes(task)
+  pre validSprintIndex:
+    sprintIndex >= 1 and sprintIndex <= self.sprints->size()
+  pre taskNotInAnySprintYet:
+    self.sprints->forAll(sprint | not sprint->includes(task))
+  post taskAddedToSprint:
+    self.sprints->at(sprintIndex)->includes(task)
+  post otherSprintsUnchanged:
+    Sequence{1..self.sprints->size()}->excluding(sprintIndex)->forAll(i |
+      self.sprints->at(i) = self.sprints@pre->at(i)
+    )
+
+context Project :: removeTaskFromSprint(task: Task, sprintIndex: Integer)
+  pre validSprintIndex:
+    sprintIndex >= 1 and sprintIndex <= self.sprints->size()
+  pre taskInSpecifiedSprint:
+    self.sprints->at(sprintIndex)->includes(task)
+  post taskRemovedFromSprint:
+    not self.sprints->at(sprintIndex)->includes(task)
+  post otherSprintsUnchanged:
+    Sequence{1..self.sprints->size()}->excluding(sprintIndex)->forAll(i |
+      self.sprints->at(i) = self.sprints@pre->at(i)
+    )
+
+context Project :: createNewSprint(): Integer
+  post sprintCreated:
+    self.sprints->size() = self.sprints@pre->size() + 1
+  post newSprintIsEmpty:
+    self.sprints->at(self.sprints->size())->isEmpty()
+  post returnsNewSprintIndex:
+    result = self.sprints->size()

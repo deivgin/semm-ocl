@@ -6,12 +6,14 @@ attributes
   startDate: Integer
   endDate: Integer
   history: Set(Tuple(date:Integer,action:String))
+  sprints: Sequence(Set(Task))
 operations
   addTask(task: Task)
   removeTask(task: Task)
   logAction(action: String)
-
-  -- QUERY: find high priority tasks in this project
+  createNewSprint(): Integer
+  addTaskToSprint(task: Task, sprintIndex: Integer)
+  removeTaskFromSprint(task: Task, sprintIndex: Integer)
   highPriorityTasks() : Set(Task) =
     self.task->select(t | t.priority = Priority::High)
 end
