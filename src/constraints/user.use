@@ -1,6 +1,8 @@
 context User
   inv idRequired:
+    -- Ensures that all users have a non-empty identifier
     not self.id.oclIsUndefined() and self.id <> ''
 
   inv emailRequired:
+    -- Ensures that all users have a valid email address for communication
     not self.email.oclIsUndefined() and self.email <> ''

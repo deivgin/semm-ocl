@@ -66,6 +66,8 @@ operations
   removeTaskFromSprint(task : Task, sprintIndex : Integer)
   highPriorityTasks() : Set(Task) =
     self.task->select(t | t.priority = Priority::High)
+  getAllTaskTitles() : Set(String) =
+    self.task->collect(t | t.title)
 end
 
 class Task
