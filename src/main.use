@@ -15,86 +15,80 @@ enum Status {Open, InProgress, Done}
 class Date
 attributes
   -- stores date in days since epoch (Jan 1, 1970)
-  now: Integer
+  now : Integer
 operations
   -- Returns the year (4 digits)
-  year(): Integer = 1970 + (self.now div 365)
+  year() : Integer = 1970 + (self.now div 365)
 
   -- Returns the month (1-12)
-  month(): Integer =
-    let dayOfYear: Integer = self.now - ((self.year() - 1970) * 365)
+  month() : Integer =
+    let dayOfYear : Integer = self.now - ((self.year() - 1970) * 365)
     in
       (dayOfYear * 12 div 365) + 1
 
   -- Returns the day of month (1-31)
-  day(): Integer =
-    let dayOfYear: Integer = self.now - ((self.year() - 1970) * 365),
-        monthVal: Integer = self.month(),
-        daysBeforeMonth: Integer = ((monthVal - 1) * 365) div 12
+  day() : Integer =
+    let dayOfYear : Integer = self.now - ((self.year() - 1970) * 365),
+        monthVal : Integer = self.month(),
+        daysBeforeMonth : Integer = ((monthVal - 1) * 365) div 12
     in
       dayOfYear - daysBeforeMonth
 
   -- Returns true if this date is a weekend
-  isWeekend(): Boolean =
-    let dayOfWeek: Integer = self.now.mod(7)
+  isWeekend() : Boolean =
+    let dayOfWeek : Integer = self.now.mod(7)
     in
       dayOfWeek = 0 or dayOfWeek = 6
 end
 
 class Note
 attributes
-  text: String
-  createdAt: Integer
-  updatedAt: Integer
+  text : String
+  createdAt : Integer
+  updatedAt : Integer
 end
 
 class Project
 attributes
-  id: String
-  title: String
-  description: String
-  startDate: Integer
-  endDate: Integer
-  history: Set(Tuple(date:Integer,action:String))
-  sprints: Sequence(Set(Task))
+  id : String
+  title : String
+  description : String
+  startDate : Integer
+  endDate : Integer
+  history : Set(Tuple(date:Integer, action:String))
+  sprints : Sequence(Set(Task))
 operations
-  addTask(task: Task)
-  removeTask(task: Task)
-  logAction(action: String)
-  createNewSprint(): Integer
-  addTaskToSprint(task: Task, sprintIndex: Integer)
-  removeTaskFromSprint(task: Task, sprintIndex: Integer)
+  addTask(task : Task)
+  removeTask(task : Task)
+  logAction(action : String)
+  createNewSprint() : Integer
+  addTaskToSprint(task : Task, sprintIndex : Integer)
+  removeTaskFromSprint(task : Task, sprintIndex : Integer)
   highPriorityTasks() : Set(Task) =
     self.task->select(t | t.priority = Priority::High)
 end
 
 class Task
 attributes
-  id: String
-  title: String
-  description: String
-  priority: Priority
-  status: Status
-  dueDate: Integer
+  id : String
+  title : String
+  description : String
+  priority : Priority
+  status : Status
+  dueDate : Integer
 operations
-  changeStatus(status: Status)
-  changePriority(priority: Priority)
-  isOverdue(): Boolean
-  assignToProject(project: Project)
-  removeFromProject(project: Project)
-
-  -- Add new operations with pre/post conditions
-  addTag(tag: String)
-  removeTag(tag: String)
-  addDependency(task: Task)
-  removeDependency(task: Task)
+  changeStatus(status : Status)
+  changePriority(priority : Priority)
+  isOverdue() : Boolean
+  assignToProject(project : Project)
+  removeFromProject(project : Project)
 end
 
 class User
 attributes
-  id: String
-  name: String
-  email: String
+  id : String
+  name : String
+  email : String
 end
 
 -- ==============================
@@ -102,18 +96,18 @@ end
 -- ==============================
 
 association Owns between
-  User [*] role owner
-  Task [1] role ownedBy
+  User[*] role owner
+  Task[1] role ownedBy
 end
 
 association Manages between
-  User [*] role manager
-  Project [1] role managedBy
+  User[*] role manager
+  Project[1] role managedBy
 end
 
 association Contains between
-  Task [*] role task
-  Project [0..1] role project
+  Task[*] role task
+  Project[0..1] role project
 end
 
 -- ==============================
@@ -125,153 +119,185 @@ constraints
 context Project
   inv uniqueId:
     Project.allInstances()->forAll(p1, p2 | p1 <> p2 implies p1.id <> p2.id)
+
   inv validTitle:
     self.title.size() > 0
+
   inv validDateRange:
     self.endDate > self.startDate
+
   inv startDateExists:
-    self.startDate <> null
+    not self.startDate.oclIsUndefined()
+
   inv endDateExists:
-    self.endDate <> null
+    not self.endDate.oclIsUndefined()
+
   inv chronologicalHistory:
-    self.history->asSequence() = self.history->asOrderedSet() -> sortedBy(h | h.date)
+    self.history->asSequence() = self.history->asOrderedSet()->sortedBy(h | h.date)
+
   inv noTasksWithSameId:
     self.task->isUnique(id)
+
   inv allTasksHaveTitles:
     self.task->forAll(t | t.title.size() > 0)
+
   inv limitHighPriorityTasks:
-    self.task->collect(t | t.priority)->select(p | p = Priority::High)->size() <= 5
+    self.task->select(t | t.priority = Priority::High)->size() <= 5
+
   inv uniqueTasksInSprints:
     -- Each task should appear in at most one sprint
     self.sprints->forAll(s1, s2 |
       s1 <> s2 implies s1->intersection(s2)->isEmpty()
     )
 
-
-
-context Project :: addTask(task: Task)
+context Project::addTask(task : Task)
   pre taskExists:
-    task <> null
+    not task.oclIsUndefined()
+
   pre taskNotAlreadyAdded:
     not self.task->includes(task)
+
   pre taskDeadlineWithinProject:
-    task.dueDate = null or task.dueDate <= self.endDate
+    task.dueDate.oclIsUndefined() or task.dueDate <= self.endDate
+
   post taskAdded:
     self.task->includes(task)
-  post taskSizeIncrease:
-    self.task->size() = self.task@pre -> size() + 1
 
-context Project :: removeTask(task: Task)
+  post taskSizeIncrease:
+    self.task->size() = self.task@pre->size() + 1
+
+context Project::removeTask(task : Task)
   pre taskExists:
-    task <> null
+    not task.oclIsUndefined()
+
   pre taskIsInProject:
     self.task->includes(task)
+
   post taskIsRemoved:
-    self.task->excludes(task) and
+    not self.task->includes(task) and
     self.task->size() = self.task@pre->size() - 1
 
-context Project :: logAction(action: String)
-  pre noAction:
-    self.history->excludes(Tuple{
-      date: 20222,
-      action: 'Create'
-      })
-  post actionAdded:
-    self.history->includes(Tuple{
-      date: 20222,
-      action: 'Create'
-      })
+context Project::logAction(action : String)
+  pre actionNotExists:
+    not self.history->includes(Tuple{date = 20222, action = 'Create'})
 
-context Project :: addTaskToSprint(task: Task, sprintIndex: Integer)
+  post actionAdded:
+    self.history->includes(Tuple{date = 20222, action = 'Create'})
+
+context Project::addTaskToSprint(task : Task, sprintIndex : Integer)
   pre taskBelongsToProject:
     self.task->includes(task)
+
   pre validSprintIndex:
     sprintIndex >= 1 and sprintIndex <= self.sprints->size()
+
   pre taskNotInAnySprintYet:
     self.sprints->forAll(sprint | not sprint->includes(task))
+
   post taskAddedToSprint:
     self.sprints->at(sprintIndex)->includes(task)
+
   post otherSprintsUnchanged:
     Sequence{1..self.sprints->size()}->excluding(sprintIndex)->forAll(i |
       self.sprints->at(i) = self.sprints@pre->at(i)
     )
 
-context Project :: removeTaskFromSprint(task: Task, sprintIndex: Integer)
+context Project::removeTaskFromSprint(task : Task, sprintIndex : Integer)
   pre validSprintIndex:
     sprintIndex >= 1 and sprintIndex <= self.sprints->size()
+
   pre taskInSpecifiedSprint:
     self.sprints->at(sprintIndex)->includes(task)
+
   post taskRemovedFromSprint:
     not self.sprints->at(sprintIndex)->includes(task)
+
   post otherSprintsUnchanged:
     Sequence{1..self.sprints->size()}->excluding(sprintIndex)->forAll(i |
       self.sprints->at(i) = self.sprints@pre->at(i)
     )
 
-context Project :: createNewSprint(): Integer
+context Project::createNewSprint() : Integer
   post sprintCreated:
     self.sprints->size() = self.sprints@pre->size() + 1
+
   post newSprintIsEmpty:
     self.sprints->at(self.sprints->size())->isEmpty()
+
   post returnsNewSprintIndex:
     result = self.sprints->size()
 
 context Task
   inv idRequired:
-    self.id <> null and self.id <> ''
+    not self.id.oclIsUndefined() and self.id <> ''
+
   inv uniqueID:
-    Task.allInstances()->
-      forAll(t1, t2 | t1 <> t2 implies t1.id <> t2.id)
+    Task.allInstances()->forAll(t1, t2 | t1 <> t2 implies t1.id <> t2.id)
+
   inv validTitle:
     self.title.size() > 0
+
   inv importantTasksHaveDueDate:
-    self.priority = Priority::High implies self.dueDate <> null
+    self.priority = Priority::High implies not self.dueDate.oclIsUndefined()
+
   inv mustHaveStatus:
-    self.status <> null
+    not self.status.oclIsUndefined()
+
   inv highPriorityTasksHaveProjectAssigned:
-    self.priority = Priority::High implies self.project <> null
+    self.priority = Priority::High implies not self.project.oclIsUndefined()
 
 
-context Task :: changeStatus(status: Status)
+context Task::changeStatus(status : Status)
   post statusChanged:
     self.status = status
+
   post oldStatusDifferent:
     self.status <> self.status@pre
 
-context Task :: changePriority(priority: Priority)
+context Task::changePriority(priority : Priority)
   post priorityChanged:
     self.priority = priority
+
   post oldPriorityDifferent:
     self.priority <> self.priority@pre
 
-context Task :: isOverdue(): Boolean
+context Task::isOverdue() : Boolean
   pre notAlreadyDone:
     self.status <> Status::Done
-  pre shouldContainDueDate:
-    self.dueDate <> null
-  post dueDateInThePast:
-    let currentDate: Date = Date.allInstances()->any(d | d.now = 20199),
-        taskDate: Integer = self.dueDate
-        in
-        result = currentDate.now > taskDate
 
-context Task :: assignToProject(project: Project)
+  pre hasDueDate:
+    not self.dueDate.oclIsUndefined()
+
+  post dueDateInThePast:
+    let currentDate : Date = Date.allInstances()->any(d | d.now = 20199),
+        taskDate : Integer = self.dueDate
+    in
+      result = currentDate.now > taskDate
+
+context Task::assignToProject(project : Project)
   pre taskNotInProject:
-    self.project = null
+    self.project.oclIsUndefined()
+
   post connectionCreated:
     project.task->includes(self)
+
   post projectSet:
     self.project = project
 
-context Task :: removeFromProject(project: Project)
+context Task::removeFromProject(project : Project)
   pre taskIsInProject:
     project.task->includes(self)
+
   post taskIsRemoved:
-    project.task->excludes(self)
+    not project.task->includes(self)
+
   post projectUnset:
-    self.project = null
+    self.project.oclIsUndefined()
 
-context User inv idRequired: self.id <> null and self.id <> ''
+context User
+  inv idRequired:
+    not self.id.oclIsUndefined() and self.id <> ''
 
-context User inv emailRequired: self.email <> null and self.email <> ''
+  inv emailRequired:
+    not self.email.oclIsUndefined() and self.email <> ''
 

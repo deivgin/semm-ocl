@@ -1,14 +1,14 @@
 association Owns between
-  User [*] role owner
-  Task [1] role ownedBy
+  User[*] role owner
+  Task[1] role ownedBy
 end
 
 association Manages between
-  User [*] role manager
-  Project [1] role managedBy
+  User[*] role manager
+  Project[1] role managedBy
 end
 
 association Contains between
-  Task [*] role task
-  Project [0..1] role project
+  Task[*] role task
+  Project[0..1] role project
 end

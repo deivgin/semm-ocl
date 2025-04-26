@@ -1,3 +1,6 @@
-context User inv idRequired: self.id <> null and self.id <> ''
+context User
+  inv idRequired:
+    not self.id.oclIsUndefined() and self.id <> ''
 
-context User inv emailRequired: self.email <> null and self.email <> ''
+  inv emailRequired:
+    not self.email.oclIsUndefined() and self.email <> ''
